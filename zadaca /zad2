@@ -1,1 +1,68 @@
+globals [dirt-count dirt-probability]
 
+to setup
+  clear-all
+  set dirt-count 0
+
+  create-turtles 1
+  [
+    set shape "turtle"
+    set color blue
+    set heading 90
+  ]
+
+  ask turtles
+  [
+    setxy -10 -10
+  ]
+
+  ask n-of 18 patches
+  [
+    set pcolor red
+  ]
+
+  reset-ticks
+end
+
+to go
+  if (count patches with [pcolor = red] = 0)
+  [
+    show "Dirt cleaned!"
+    stop
+  ]
+
+  ask turtles
+  [
+    clean
+  ]
+
+  set dirt-probability random 100
+  if dirt-probability >= 95
+  [
+    ask n-of 1 patches [ set pcolor red ]
+  ]
+
+  tick
+end
+
+to clean
+  if ([pcolor] of patch-here = red)
+  [
+    set dirt-count dirt-count + 1
+    type "Dirt: " type dirt-count print ""
+    wait 0.5
+    set pcolor black
+  ]
+
+  let target-patch min-one-of patches with [pcolor = red] [distance myself]
+  if target-patch != nobody
+  [
+    face target-patch
+    fd 1
+  ]
+
+  if (xcor = 10) and (ycor = 10)
+  [
+    setxy -10 -10
+  ]
+end
