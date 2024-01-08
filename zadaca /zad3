@@ -1,0 +1,130 @@
+globals [road-width road-height]
+
+breed [vehicles vehicle]
+breed [obstacles square]
+
+to setup
+  clear-all
+  set road-width 16
+  set road-height 14
+
+  draw-road
+  create-vehicles 6
+  create-obstacles 4
+  initialize-vehicles
+
+  ;; Place traffic light above the road
+  ask patch (road-width / 2) ((road-height / 2) + 1)
+
+  [
+    set pcolor red
+  ]
+
+  reset-ticks
+end
+
+to go
+  move-vehicles
+  manage-traffic-lights
+  tick
+end
+
+to initialize-vehicles
+  ask vehicles
+  [
+    set color green
+    set shape "car"
+    place-vehicle
+  ]
+
+  ask obstacles
+  [
+    set color black
+    set shape "square"
+    place-obstacle
+  ]
+end
+
+to move-vehicles
+  ask vehicles
+  [
+    ifelse traffic-light-is-green
+    [
+      ifelse any? obstacles-on patch-here
+      [
+        avoid-obstacle
+      ]
+      [
+        move-forward
+      ]
+    ]
+    [
+      set color red
+    ]
+  ]
+end
+
+to avoid-obstacle
+  let possible-lanes patches in-radius 1 with [pcolor = gray and not any? vehicles-here]
+  ifelse any? possible-lanes
+  [
+    let new-lane one-of possible-lanes
+    move-to new-lane
+    set color yellow
+  ]
+  [
+    set color red
+  ]
+end
+
+to move-forward
+  fd 1
+end
+
+to manage-traffic-lights
+  ifelse ticks mod 100 > 30
+  [
+    ask patch (road-width / 2) ((road-height / 2) + 1)
+    [
+      set pcolor green
+    ]
+  ]
+  [
+    ask patch (road-width / 2) ((road-height / 2) + 1)
+    [
+      set pcolor red
+    ]
+  ]
+end
+
+
+to draw-road
+  let px (road-width / 2)
+  let py (- road-height / 2)
+  while [py < road-height / 2 + 1]
+  [
+    ask patch px py
+    [
+      set pcolor gray
+    ]
+    set px px + 1
+    if px = road-width / 2 + 1
+    [
+      set px (- road-width / 2)
+      set py py + 1
+    ]
+  ]
+end
+
+to place-vehicle
+  move-to one-of patches with [pcolor = gray and (not any? vehicles-here)]
+  set heading 90
+end
+
+to place-obstacle
+  move-to one-of patches with [pcolor = gray and (not any? vehicles-here) and (not any? obstacles-here)]
+end
+
+to-report traffic-light-is-green
+  report ([pcolor] of patch (road-width / 2) ((road-height / 2) + 1) = green)
+end
